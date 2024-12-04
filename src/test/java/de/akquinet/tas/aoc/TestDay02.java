@@ -2,6 +2,7 @@ package de.akquinet.tas.aoc;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -30,7 +31,24 @@ class TestDay02 {
             
         LOG.info("Safe reports: {}", count);
         
-        Assertions.assertThat(count).isPositive();
+        Assertions.assertThat(count).isEqualTo(549);
+    }
+
+    @Test
+    void getPart2SafeReports() throws IOException {
+        LOG.info("getPart2SafeReports()");
+        
+        List<String> lines = IOUtils.readLines(TestDay02.class.getResourceAsStream("/day02_list.txt"));
+        
+        Assertions.assertThat(lines).isNotEmpty();
+        
+        long count = lines.stream()
+            .filter(l -> checkSaveReportWithDampener(l))
+            .count();
+            
+        LOG.info("Safe reports: {}", count);
+        
+        Assertions.assertThat(count).isEqualTo(589);
     }
 
     private boolean checkSaveReport(String line) 
@@ -39,11 +57,29 @@ class TestDay02 {
             .map(s -> Integer.valueOf(s))
             .toList();
         
-        if (!checkStetigkeit(list)) { 
-            return false;
+        return checkStetigkeit(list) && checkDifference(list);
+    }
+
+    private boolean checkSaveReportWithDampener(String line) 
+    {
+        List<Integer> list = Arrays.stream(line.split(" "))
+            .map(s -> Integer.valueOf(s))
+            .toList();
+        
+        if (checkStetigkeit(list) && checkDifference(list)) { 
+            return true;
         }
 
-        return checkDifference(list);
+        for (int i = 0; i < list.size(); i++) {
+            var l = new ArrayList<Integer>(list);
+            l.remove(i);
+            
+            if (checkStetigkeit(l) && (checkDifference(l))) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     private boolean checkDifference(List<Integer> list)
@@ -65,9 +101,6 @@ class TestDay02 {
         
         return IntStream.range(0, list.size() - 1)
                 .allMatch(i -> list.get(i) < list.get(i + 1));
-
     }
         
-    
-
 }
