@@ -1,0 +1,52 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+/src/main/resources/application-test-private.properties
+/src/main/resources/application-private.properties
+/src/main/resources/application-feigenbaum.properties
+
+runConfigs/runconfig/feigenbaum.run.xml
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+.jpb
+
+http-client.private.env.json
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+### vim ###
+*.swp
+
+### VS Code ###
+.vscode/
+
+.DS_Store
+.m2/repository
+
+example-profile
+*.log
+zufallsgenerator.cache
+zufallsgenerator.cache.wal.0
+/fachverfahren/src/main/docker/target/
