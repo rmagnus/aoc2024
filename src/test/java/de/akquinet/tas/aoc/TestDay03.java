@@ -19,8 +19,8 @@ class TestDay03 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     
     @Test
-    void getPart1Mull() throws IOException {
-        LOG.info("getPart1SafeReports()");
+    void getPart1Mul() throws IOException {
+        LOG.info("getPart1Mul()");
         
         List<String> lines = IOUtils.readLines(TestDay03.class.getResourceAsStream("/day03_list.txt"));
         
@@ -45,8 +45,8 @@ class TestDay03 {
     }
 
     @Test
-    void getPart2Mull() throws IOException {
-        LOG.info("getPart1SafeReports()");
+    void getPart2Mul() throws IOException {
+        LOG.info("getPart2Mul()");
         
         List<String> lines = IOUtils.readLines(TestDay03.class.getResourceAsStream("/day03_list.txt"));
         
