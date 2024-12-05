@@ -18,7 +18,7 @@ class TestDay04 {
     void getPart1XMASSearch() throws IOException {
         LOG.info("getPart1XMASSearch()");
 
-        List<String> lines = IOUtils.readLines(TestDay04.class.getResourceAsStream("/day04_list.txt"));
+        List<String> lines = IOUtils.readLines(TestDay04.class.getResourceAsStream("/day04_list_test.txt"));
 
         Assertions.assertThat(lines).isNotEmpty();
 
@@ -34,41 +34,27 @@ class TestDay04 {
 
         int result = 0;
 
-        // search forward
-        for (int i = 0; i < array.length; i++) {
-            for (int j = 0; j < array.length - 3; j++) {
-                if (isXMAS(array, i, j, i, j + 1, i, j + 2, i, j + 3)) {
-                    result++;
-                }
-            }
+        // vorwärts, jede Zeile scannen
+        for (int i = 0; i < heigth; i++) {
+            result = result + checkXMAS(array, i, 0, 0, 1);
         }
 
-        // search backward
-        for (int i = 0; i < array.length; i++) {
-            for (int j = 3; j < array.length; j++) {
-                if (isXMAS(array, i, j, i, j - 1, i, j - 2, i, j - 3)) {
-                    result++;
-                }
-            }
+        // rückwärts, jede Zeile scannen
+        for (int i = 0; i < heigth; i++) {
+            result = result + checkXMAS(array, i, width - 1, 0, -1);
         }
 
-        // search down
-        for (int i = 0; i < array.length - 3; i++) {
-            for (int j = 0; j < array.length; j++) {
-                if (isXMAS(array, i, j, i + 1, j, i + 2, j, i + 3, j)) {
-                    result++;
-                }
-            }
+        // runter, jede Spalte scannen
+        for (int i = 0; i < width; i++) {
+            result = result + checkXMAS(array, 0, i , 1, 0);
         }
 
-        // search up
-        for (int i = 3; i < array.length; i++) {
-            for (int j = 0; j < array.length; j++) {
-                if (isXMAS(array, i, j, i - 1, j, i - 2, j, i - 3, j)) {
-                    result++;
-                }
-            }
+        // hoch, jede Spalte scannen
+        for (int i = 0; i < width; i++) {
+            result = result + checkXMAS(array, heigth - 1, i, -1, 0);
         }
+
+/*
 
         // search diagonal right down
         for (int i = 0; i < array.length - 3; i++) {
@@ -105,35 +91,45 @@ class TestDay04 {
                 }
             }
         }
+*/
 
         LOG.info("result: {}", result);
 
     }
 
-    private boolean isXMAS(char[][] array, int... indizies) {
-        int h1 = indizies[0];
-        int w1 = indizies[1];
-        int h2 = indizies[2];
-        int w2 = indizies[3];
-        int h3 = indizies[4];
-        int w3 = indizies[5];
-        int h4 = indizies[6];
-        int w4 = indizies[7];
+    private int checkXMAS(char[][] array, int x, int y, int dx, int dy)
+    {
+        if (reachBorder(array, x, y)) {
+            return 0;
+        }
+        
+        int count = 0;
+        char[] xmas = {'X', 'M', 'A', 'S' };
 
-        int height = array.length;
+        for (int i = 0; i < xmas.length; i++) {
+            while (!reachBorder(array, x, y)) {
+                char c = array[x][y];
+                if (c == xmas[i]) {
+                    count++;
+                    break;
+                }
+                x = x + dx;
+                y = y + dy;
+            }
+        }
+        
+        if (count < 4) {
+            return checkXMAS(array, x, y, dx, dy);
+        }
+        
+        return 1 + checkXMAS(array, x, y, dx, dy);
+    }
+    
+    private boolean reachBorder(char[][] array, int x, int y) {
         int width = array[0].length;
+        int heigth = array.length;
 
-        if ((h1 > height) || (h2 > height) || (h3 > height) || (h4 > height)) {
-            return false;
-        }
-
-        if ((w1 > width) || (w2 > width) || (w3 > width) || (w4 > width)) {
-            return false;
-        }
-
-        boolean b = array[h1][w1] == 'X' && array[h2][w2] == 'M' && array[h3][w3] == 'A' && array[h4][w4] == 'S';
-        return b;
-
+        return (x == width) || (y == heigth) || (x == -1) || (y == -1);
     }
 
 }
