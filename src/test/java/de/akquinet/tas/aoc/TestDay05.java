@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -35,34 +36,51 @@ class TestDay05 {
     void getPart1XSearchValidMiddlePage() throws IOException {
         LOG.info("getPart1XSearchValidMiddlePage()");
 
-        int result = 0;
         List<String> pageLines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day05_pages.txt"));
 
-        result = pageLines.stream()
+        int result = pageLines.stream()
             .map(l -> Arrays.asList(l.split(",")))
-            .filter(array -> checkAllRules(array))
-            .map(list -> {
-                int pos = (list.size() / 2);
-                Integer integer = Integer.valueOf(list.get(pos));
-                return integer;
-                })
+            .filter(list -> checkAllRules(list))
+            .map(list -> Integer.valueOf(list.get((list.size() / 2))))
             .reduce(0, (a,b) -> a+b);
-        
-            
+
         LOG.info("result: {}", result);
         
-        Assertions.assertThat(result).isPositive();
+        Assertions.assertThat(result).isEqualTo(5639);
     }
 
+    @Test
+    void getPart2XSearchInValidMiddlePage() throws IOException {
+        LOG.info("getPart2XSearchInValidMiddlePage()");
+
+        List<String> pageLines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day05_pages.txt"));
+
+        RulesComperator rc = new RulesComperator(ruleList);
+        
+        int result = pageLines.stream()
+            .map(l -> Arrays.asList(l.split(",")))
+            .filter(list -> !checkAllRules(list))
+            .map(list -> { list.sort(rc); return list; })
+            .map(list -> Integer.valueOf(list.get((list.size() / 2))))
+            .reduce(0, (a,b) -> a+b);
+
+        LOG.info("result: {}", result);
+        
+        Assertions.assertThat(result).isEqualTo(5273);
+    }
+
+
+    
     private boolean checkAllRules(List<String> array)
     {
         boolean b = true;
         for (Pair<String, String> rule : ruleList) {
             b = b && checkRule(array, rule);
-            if (!b) { break; }
+            if (!b) {
+                return false;
+            }
         }
-
-        return b;
+        return true;
     }
 
     private boolean checkRule(List<String> pages, Pair<String, String> rule)
@@ -75,6 +93,23 @@ class TestDay05 {
         }
         
         return pages.indexOf(left) < pages.indexOf(right);
+    }
+
+    public class RulesComperator implements Comparator<String> {
+
+        private List<Pair<String, String>> rules;
+
+        public RulesComperator(List<Pair<String, String>> rules) {
+            this.rules = rules;
+        }
+
+        @Override
+        public int compare(String o1, String o2) {
+            if (rules.contains(Pair.of(o1,o2))) { return -1; }
+            if (rules.contains(Pair.of(o2,o1))) { return 1; }
+            return 0;
+        }
+
     }
 
 
