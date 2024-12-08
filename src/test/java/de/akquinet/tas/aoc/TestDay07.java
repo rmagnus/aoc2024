@@ -23,7 +23,7 @@ class TestDay07 {
     @BeforeEach
     public void beforeEach() throws IOException
     {
-        List<String> lines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day07/day07_list_test.txt"));
+        List<String> lines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day07/day07_list.txt"));
 
         list = lines.stream()
             .map(l -> {
@@ -64,7 +64,7 @@ class TestDay07 {
         
         LOG.info("sum: {}", sum);
 
-        Assertions.assertThat(sum).isEqualTo(11387l);
+        Assertions.assertThat(sum).isEqualTo(337041851384440l);
     }
 
     private List<Long> existsValidCombinationsTwo(List<Long> nums) {
@@ -107,9 +107,9 @@ class TestDay07 {
         }
 
         // Recursive case: Apply + and - to the current element with the next element
-        generateCombinationsHelperTwo(nums, index + 1, current + nums.get(index), results);
-        generateCombinationsHelperTwo(nums, index + 1, Long.valueOf("" + current + nums.get(index)), results);
-        generateCombinationsHelperTwo(nums, index + 1, current * nums.get(index), results);
+        generateCombinationsHelperThree(nums, index + 1, current + nums.get(index), results);
+        generateCombinationsHelperThree(nums, index + 1, Long.valueOf("" + current + nums.get(index)), results);
+        generateCombinationsHelperThree(nums, index + 1, current * nums.get(index), results);
     }
 
 }
