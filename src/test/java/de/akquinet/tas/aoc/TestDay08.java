@@ -3,9 +3,12 @@ package de.akquinet.tas.aoc;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -21,7 +24,7 @@ class TestDay08 {
 
     char[][] array, array2;
     int heigth, width;
-    Map<Character, List<Pair<Integer, Integer>>> map = new HashMap<>();
+    Map<Character, List<Coordinate>> map = new HashMap<>();
     
     @BeforeEach
     public void beforeEach() throws IOException
@@ -42,9 +45,9 @@ class TestDay08 {
                 char c = array[i][j];
                 if (c != '.') {
                     if (map.containsKey(c)) {
-                        map.get(c).add(Pair.of(i, j));
+                        map.get(c).add(Coordinate.of(i, j));
                     } else {
-                        map.put(c, new ArrayList<>(List.of(Pair.of(i, j))));
+                        map.put(c, new ArrayList<>(List.of(Coordinate.of(i, j))));
                     }
                 }
             }
@@ -55,11 +58,20 @@ class TestDay08 {
     void getPart1Count()
     {
         LOG.info("getPart1Count()");
-        
-        long count = map.entrySet().stream()
-            .map(e -> getValidAntiNodes(e.getValue()))
-            .reduce(0l, (a,b) -> a+b);
 
+        Set<Coordinate> set = new HashSet<>();
+        
+        map.values().stream()
+                .forEach(l -> set.addAll(getValidAntiNodes(l)));
+        
+        logNodePos();
+        
+        int count = set.size();
+        
+        Assertions.assertThat(count).isEqualTo(14);
+    }
+
+    private void logNodePos() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < array2.length; i++) {          // Rows
             for (int j = 0; j < array2[0].length; j++) {   // Columns
@@ -69,60 +81,65 @@ class TestDay08 {
         }
 
         LOG.info("points:\n{}", sb);
-        
-        Assertions.assertThat(count).isEqualTo(14);
     }
 
-    private Long getValidAntiNodes(List<Pair<Integer, Integer>> points) {
-        return getAllCombinations(points).stream()
-            .map(p -> getNumberOfAntiNodes(p))
-            .reduce(0l, (a,b) -> a+b);
+    private Set<Coordinate> getValidAntiNodes(List<Coordinate> points) {
+        Set<Coordinate> set = new HashSet<>();
+        
+        getAllCombinations(points).stream()
+            .map(p -> getSetOfAntiNodes(p))
+            .flatMap(Collection::stream)
+            .forEach(c -> set.add(c));
+        
+        return set;
     }
 
-    private long getNumberOfAntiNodes(Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> points) {
-        
-        long count = 0;
-        List<Pair<Integer, Integer>> line = getPointsOnLine(points.getLeft(), points.getRight());
-        count = line.stream()
+    private Set<Coordinate> getSetOfAntiNodes(Pair<Coordinate, Coordinate> points)
+    {
+        Set<Coordinate> set = new HashSet<>();
+        List<Coordinate> line = getPointsOnLine(points.getLeft(), points.getRight());
+        line.stream()
             .filter(p -> {
                 boolean b = isRightDistance(p, points.getLeft(), points.getRight());
                 if (b) {
-                    array2[p.getLeft()][p.getRight()] = '#';
+                    array2[p.getX()][p.getY()] = '#';
+                    LOG.info("p1: {} p2: {} pos: {}", points.getLeft(), points.getRight(), p);
+                    logNodePos();
                 }
                 return b; 
             })
-            .count();
+            .forEach(c -> set.add(c));
         
-        return count;
+        return set;
     }
 
-    private boolean isRightDistance(Pair<Integer, Integer> p, Pair<Integer, Integer> left,
-            Pair<Integer, Integer> right)
+    private boolean isRightDistance(Coordinate p, Coordinate left,
+            Coordinate right)
     {
         int d1 = distance(p, left);
         int d2 = distance(p, right);
         return ((d1 == 2 * d2) || (d2 == 2 * d1)); 
     }
 
-    private int distance(Pair<Integer, Integer> p1, Pair<Integer, Integer> p2)
+    private int distance(Coordinate p1, Coordinate p2)
     {
-        int r1 = p1.getLeft(); // Column index of the start point
-        int c1 = p1.getRight(); // Row index of the start point
-        int r2 = p2.getLeft();   // Column index of the end point
-        int c2 = p2.getRight();   // Row index of the end point
+        int r1 = p1.getX(); // Column index of the start point
+        int c1 = p1.getY(); // Row index of the start point
+        int r2 = p2.getX();   // Column index of the end point
+        int c2 = p2.getY();   // Row index of the end point
         
         double sqrt = Math.sqrt(Math.pow(r2 - r1, 2) + Math.pow(c2 - c1, 2));
 
         return (int)sqrt;
     }
 
-    private List<Pair<Integer, Integer>> getPointsOnLine(Pair<Integer, Integer> p1, Pair<Integer, Integer> p2) {
-        List<Pair<Integer, Integer>> pointsOnLine = new ArrayList<>();
+    private List<Coordinate> getPointsOnLine(Coordinate p1, Coordinate p2) {
+        List<Coordinate> pointsOnLine = new ArrayList<>();
 
-        int x1 = p1.getLeft(); // Column index of the start point
-        int y1 = p1.getRight(); // Row index of the start point
-        int x2 = p2.getLeft();   // Column index of the end point
-        int y2 = p2.getRight();   // Row index of the end point
+        int x1 = p1.getX(); // Column index of the start point
+        int y1 = p1.getY(); // Row index of the start point
+        int x2 = p2.getX();   // Column index of the end point
+        int y2 = p2.getY();   // Row index of the end point
 
         int dx = x2 - x1;
         int dy = y2 - y1;
@@ -131,7 +148,7 @@ class TestDay08 {
             for (int j = 0; j < array[0].length; j++) {   // Columns
                 // Check if the point (i, j) satisfies the line equation
                 if ((i - y1) * dx == (j - x1) * dy) {
-                    pointsOnLine.add(Pair.of(j, i));
+                    pointsOnLine.add(Coordinate.of(j, i));
                 }
             }
         }
@@ -146,15 +163,15 @@ class TestDay08 {
 
     }
 
-    private List<Pair<Pair<Integer, Integer>, Pair<Integer, Integer>>> getAllCombinations(
-            List<Pair<Integer, Integer>> nums) {
-        List<Pair<Pair<Integer, Integer>, Pair<Integer, Integer>>> combinations = new ArrayList<>();
+    private List<Pair<Coordinate, Coordinate>> getAllCombinations(
+            List<Coordinate> points) {
+        List<Pair<Coordinate, Coordinate>> combinations = new ArrayList<>();
 
         // Outer loop for the first element
-        for (int i = 0; i < nums.size(); i++) {
+        for (int i = 0; i < points.size(); i++) {
             // Inner loop for the second element
-            for (int j = i + 1; j < nums.size(); j++) {
-                combinations.add(Pair.of(nums.get(i), nums.get(j)));
+            for (int j = i + 1; j < points.size(); j++) {
+                combinations.add(Pair.of(points.get(i), points.get(j)));
             }
         }
         return combinations;

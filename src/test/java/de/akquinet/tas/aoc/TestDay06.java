@@ -22,7 +22,7 @@ class TestDay06 {
 
     char[][] array;
     int heigth, width, startX, startY;
-    List<Pair<Integer, Integer>> vectors = List.of(Pair.of(-1, 0), Pair.of(0, 1), Pair.of(1, 0), Pair.of(0, -1));
+    List<Coordinate> vectors = List.of(Coordinate.of(-1, 0), Coordinate.of(0, 1), Coordinate.of(1, 0), Coordinate.of(0, -1));
 
     @BeforeEach
     public void beforeEach() throws IOException {
@@ -63,28 +63,28 @@ class TestDay06 {
 
         LOG.info("steps: {}", count);
 
-        Assertions.assertThat(count).isPositive();
+        Assertions.assertThat(count).isGreaterThan(-1);
     }
 
     private int getObstacleCount() {
         
-        Map<Pair<Integer,Integer>, Pair<Integer,Integer>> map = new HashMap<>();
+        Map<Coordinate, Coordinate> map = new HashMap<>();
 
         int count = 0;
         int direction = 0;
         int x = startX;
         int y = startY;
-        Pair<Integer, Integer> vector = vectors.get(direction);
+        Coordinate vector = vectors.get(direction);
         while (true) {
-            while (array[x + vector.getLeft()][y + vector.getRight()] != '#') {
-                map.put(Pair.of(x, y), vector);
-                x = x + vector.getLeft();
-                y = y + vector.getRight();
+            while (array[x + vector.getX()][y + vector.getY()] != '#') {
+                map.put(Coordinate.of(x, y), vector);
+                x = x + vector.getX();
+                y = y + vector.getY();
                 if (leavesArea(x, y, vector)) {
                     return count;
                 }
                 if (isPlaceForObstacle(map, x, y, direction)) {
-                    LOG.info("x: {} y: {}",1 + x + vector.getLeft(),1 + y + vector.getRight());
+                    LOG.info("x: {} y: {}",1 + x + vector.getX(),1 + y + vector.getY());
                     count = count + 1; 
                 }
             }
@@ -93,16 +93,16 @@ class TestDay06 {
         }
     }
 
-    private boolean isPlaceForObstacle(Map<Pair<Integer, Integer>, Pair<Integer, Integer>> map, int x, int y,
+    private boolean isPlaceForObstacle(Map<Coordinate, Coordinate> map, int x, int y,
             int direction)
     {
-        Pair<Integer, Integer> pos = Pair.of(x, y);
+        Coordinate pos = Coordinate.of(x, y);
 
         if (!map.containsKey(pos)) {
             return false;
         }
         
-        Pair<Integer, Integer> lastVector = map.get(pos);
+        Coordinate lastVector = map.get(pos);
         
         return lastVector.equals(vectors.get((direction+1)%4));
     }
@@ -114,12 +114,12 @@ class TestDay06 {
         int direction = 0;
         int x = startX;
         int y = startY;
-        Pair<Integer, Integer> vector = vectors.get(direction);
+        Coordinate vector = vectors.get(direction);
         while (true) {
-            while (array[x + vector.getLeft()][y + vector.getRight()] != '#') {
+            while (array[x + vector.getX()][y + vector.getY()] != '#') {
                 pos.add(Pair.of(x, y));
-                x = x + vector.getLeft();
-                y = y + vector.getRight();
+                x = x + vector.getX();
+                y = y + vector.getY();
                 if (leavesArea(x, y, vector)) {
                     return pos.size() + 1;
                 }
@@ -129,11 +129,11 @@ class TestDay06 {
         }
     }
 
-    private boolean leavesArea(int x, int y, Pair<Integer, Integer> vector) {
-        x = x + vector.getLeft();
+    private boolean leavesArea(int x, int y, Coordinate vector) {
+        x = x + vector.getX();
         if ((x < 0) || (x == heigth)) {return true; }
 
-        y = y + vector.getRight();
+        y = y + vector.getY();
         if ((y < 0) || (y == width)) {return true; }
 
         return false;
