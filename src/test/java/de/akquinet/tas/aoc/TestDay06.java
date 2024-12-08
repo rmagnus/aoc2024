@@ -2,8 +2,10 @@ package de.akquinet.tas.aoc;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
@@ -53,6 +55,58 @@ class TestDay06 {
         Assertions.assertThat(steps).isEqualTo(5080);
     }
 
+    @Test
+    void getPart2GetObstacleCount() {
+        LOG.info("getPart2GetObstacleCount()");
+
+        int count = getObstacleCount();
+
+        LOG.info("steps: {}", count);
+
+        Assertions.assertThat(count).isPositive();
+    }
+
+    private int getObstacleCount() {
+        
+        Map<Pair<Integer,Integer>, Pair<Integer,Integer>> map = new HashMap<>();
+
+        int count = 0;
+        int direction = 0;
+        int x = startX;
+        int y = startY;
+        Pair<Integer, Integer> vector = vectors.get(direction);
+        while (true) {
+            while (array[x + vector.getLeft()][y + vector.getRight()] != '#') {
+                map.put(Pair.of(x, y), vector);
+                x = x + vector.getLeft();
+                y = y + vector.getRight();
+                if (leavesArea(x, y, vector)) {
+                    return count;
+                }
+                if (isPlaceForObstacle(map, x, y, direction)) {
+                    LOG.info("x: {} y: {}",1 + x + vector.getLeft(),1 + y + vector.getRight());
+                    count = count + 1; 
+                }
+            }
+            direction = (direction + 1) % 4;
+            vector = vectors.get(direction);
+        }
+    }
+
+    private boolean isPlaceForObstacle(Map<Pair<Integer, Integer>, Pair<Integer, Integer>> map, int x, int y,
+            int direction)
+    {
+        Pair<Integer, Integer> pos = Pair.of(x, y);
+
+        if (!map.containsKey(pos)) {
+            return false;
+        }
+        
+        Pair<Integer, Integer> lastVector = map.get(pos);
+        
+        return lastVector.equals(vectors.get((direction+1)%4));
+    }
+
     private int getSteps() {
         
         Set<Pair<Integer,Integer>> pos = new HashSet<>();
@@ -83,12 +137,6 @@ class TestDay06 {
         if ((y < 0) || (y == width)) {return true; }
 
         return false;
-    }
-
-    @Test
-    void getPart2XSearchInValidMiddlePage() throws IOException {
-        LOG.info("getPart2XSearchInValidMiddlePage()");
-
     }
 
 }
