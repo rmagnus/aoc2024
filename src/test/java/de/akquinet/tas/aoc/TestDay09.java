@@ -3,9 +3,9 @@ package de.akquinet.tas.aoc;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
@@ -24,13 +24,11 @@ class TestDay09 {
     @BeforeEach
     public void beforeEach() throws IOException
     {
-        List<String> lines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day09/day09_structure_test.txt"));
+        List<String> lines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day09/day09_structure.txt"));
 
         int id = -1;
         int place = 0;
-        boolean isFile = false;
         for (int i = 0; i < lines.get(0).toCharArray().length; i++) {
-            isFile = !isFile;
             
             // char -> int
             int integer = (int) lines.get(0).toCharArray()[i] - 48;
@@ -39,7 +37,7 @@ class TestDay09 {
                 continue;
             }
 
-            if (isFile) {
+            if (i % 2 == 0) {
                 id = id + 1;
                 place = id;
             } else {
@@ -68,8 +66,8 @@ class TestDay09 {
         
         LOG.info("sum: {}", sum);
 
-        Assertions.assertThat(sum).isEqualTo(1928);
-//        Assertions.assertThat(sum).isEqualTo(6430446922192l);
+//        Assertions.assertThat(sum).isEqualTo(1928);
+        Assertions.assertThat(sum).isEqualTo(6430446922192l);
     }
 
     @Test
@@ -85,14 +83,14 @@ class TestDay09 {
         
         LOG.info("count: {}", sum);
 
-        Assertions.assertThat(sum).isEqualTo(6430446922192l);
+        Assertions.assertThat(sum).isEqualTo(6460170593016l);
     }
 
     private long getChecksum(List<Integer> list) {
         long l = 0;
         for (int pos = 0; pos < list.size(); pos++) {
             Integer id = list.get(pos);
-            if (id < 0) { return l; }
+            if (id < 0) { continue; }
             l = l + pos * id;
         }
         return l;
@@ -122,40 +120,58 @@ class TestDay09 {
         for (int id = maxId; id >=0; id--) {
             // wie groß ist der Fileblock
             List<Integer> indizies = getPositionForId(disc, id);
-            int blockSizeId = indizies.size();
                         
             // haben wir einen freien Block dieser Größe
-            Optional<List<Integer>> block = getFreeBlock(disc, blockSizeId);
+            Optional<List<Integer>> freeBlock = getFreeBlock(disc, indizies.size());
 
-            // verschieben
+            // und liegt er davor
+            if (freeBlock.isPresent() && (freeBlock.get().getLast() < indizies.getFirst())) {
+                // verschieben
+                moveBlock(disc, id, indizies, freeBlock.get());    
+            }
 
             // ansonsten nächste Id
         }
 
         
-        int l1 = 0;
-        int l2 = disc.size() - 1;
-        
-        while (l1 < l2) {
-            l1 = getFirstFreeIndex(disc);
-            l2 = getLastUsed(disc);
-            if (l1 < l2) {
-                disc.set(l1, disc.get(l2));
-                disc.set(l2, -1);
-            }
-        }
-
         return disc;
     }
 
-    private Optional<List<Integer>> getFreeBlock(List<Integer> disc, int blockSizeId) {
-
-        return Optional.empty();
+    private void moveBlock(List<Integer> disc, int id, List<Integer> block, List<Integer> freeBlock)
+    {
+        IntStream.range(freeBlock.get(0), freeBlock.get(0) + block.size())
+            .forEach(i -> disc.set(i, id));
+        block.stream().forEach(i -> disc.set(i, -1));
     }
 
+    private Optional<List<Integer>> getFreeBlock(List<Integer> numbers, int blockSizeId)
+    {
+
+        List<List<Integer>> result = new ArrayList<>();
+
+        int i = 0;
+        while (i < numbers.size()) {
+            // If the current element is -1, start collecting a sublist
+            if (numbers.get(i) == -1) {
+                List<Integer> sublist = new ArrayList<>();
+                while (i < numbers.size() && numbers.get(i) == -1) {
+                    sublist.add(i);
+                    i++;
+                }
+                result.add(sublist);
+            } else {
+                i++;
+            }
+        }
+
+        return result.stream()
+            .filter(l -> l.size() >= blockSizeId)
+            .findFirst();
+    }
+    
     private List<Integer> getPositionForId(List<Integer> disc, int i) {
         List<Integer> indizies = new ArrayList<>();
-        for (int j = 0; j < disc.size()-1; j++) {
+        for (int j = 0; j < disc.size(); j++) {
             if (i == disc.get(j)) {
                 indizies.add(j);
             }
