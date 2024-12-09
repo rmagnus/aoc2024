@@ -119,15 +119,15 @@ class TestDay09 {
         // pro Id absteigend
         for (int id = maxId; id >=0; id--) {
             // wie groß ist der Fileblock
-            List<Integer> indizies = getPositionForId(disc, id);
+            List<Integer> idBlock = getPositionForId(disc, id);
                         
             // haben wir einen freien Block dieser Größe
-            Optional<List<Integer>> freeBlock = getFreeBlock(disc, indizies.size());
+            Optional<List<Integer>> freeBlock = getFreeBlock(disc, idBlock.size());
 
             // und liegt er davor
-            if (freeBlock.isPresent() && (freeBlock.get().getLast() < indizies.getFirst())) {
+            if (freeBlock.isPresent() && (freeBlock.get().getLast() < idBlock.getFirst())) {
                 // verschieben
-                moveBlock(disc, id, indizies, freeBlock.get());    
+                moveBlock(disc, id, idBlock, freeBlock.get());    
             }
 
             // ansonsten nächste Id
