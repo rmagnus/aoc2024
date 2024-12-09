@@ -25,11 +25,11 @@ class TestDay08 {
     char[][] array, array2;
     int heigth, width;
     Map<Character, List<Coordinate>> map = new HashMap<>();
-    
+
     @BeforeEach
     public void beforeEach() throws IOException
     {
-        List<String> lines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day08/day08_map_test.txt"));
+        List<String> lines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day08/day08_map.txt"));
 
         width = lines.get(0).length();
         heigth = lines.size();
@@ -60,94 +60,67 @@ class TestDay08 {
         LOG.info("getPart1Count()");
 
         Set<Coordinate> set = new HashSet<>();
-        
+
         map.values().stream()
                 .forEach(l -> set.addAll(getValidAntiNodes(l)));
-        
-        logNodePos();
-        
+
         int count = set.size();
-        
-        Assertions.assertThat(count).isEqualTo(14);
-    }
 
-    private void logNodePos() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < array2.length; i++) {          // Rows
-            for (int j = 0; j < array2[0].length; j++) {   // Columns
-                sb.append(array2[i][j]);
-            }
-            sb.append("\n");
-        }
-
-        LOG.info("points:\n{}", sb);
+        Assertions.assertThat(count).isEqualTo(269);
     }
 
     private Set<Coordinate> getValidAntiNodes(List<Coordinate> points) {
         Set<Coordinate> set = new HashSet<>();
-        
+
         getAllCombinations(points).stream()
             .map(p -> getSetOfAntiNodes(p))
             .flatMap(Collection::stream)
             .forEach(c -> set.add(c));
-        
+
         return set;
     }
 
     private Set<Coordinate> getSetOfAntiNodes(Pair<Coordinate, Coordinate> points)
     {
         Set<Coordinate> set = new HashSet<>();
-        List<Coordinate> line = getPointsOnLine(points.getLeft(), points.getRight());
+        Set<Coordinate> line = getPointsOnLine(points.getLeft(), points.getRight());
         line.stream()
-            .filter(p -> {
-                boolean b = isRightDistance(p, points.getLeft(), points.getRight());
-                if (b) {
-                    array2[p.getX()][p.getY()] = '#';
-                    LOG.info("p1: {} p2: {} pos: {}", points.getLeft(), points.getRight(), p);
-                    logNodePos();
-                }
-                return b; 
-            })
+            .filter(p ->  isRightDistance(p, points.getLeft(), points.getRight()))
             .forEach(c -> set.add(c));
-        
+
         return set;
     }
 
-    private boolean isRightDistance(Coordinate p, Coordinate left,
-            Coordinate right)
+    private boolean isRightDistance(Coordinate p, Coordinate a,
+            Coordinate b)
     {
-        int d1 = distance(p, left);
-        int d2 = distance(p, right);
-        return ((d1 == 2 * d2) || (d2 == 2 * d1)); 
+        int dxpa = p.getX() - a.getX();
+        int dypa = p.getY() - a.getY();
+        int dxpb = p.getX() - b.getX();
+        int dypb = p.getY() - b.getY();
+
+        if (((dxpa == (2 * dxpb)) && (dypa == (2 * dypb) )) || ((dxpb == (2 * dxpa)) && (dypb == (2 * dypa) ))) {
+            return true;
+        }
+
+        return false;
     }
 
-    private int distance(Coordinate p1, Coordinate p2)
-    {
-        int r1 = p1.getX(); // Column index of the start point
-        int c1 = p1.getY(); // Row index of the start point
-        int r2 = p2.getX();   // Column index of the end point
-        int c2 = p2.getY();   // Row index of the end point
-        
-        double sqrt = Math.sqrt(Math.pow(r2 - r1, 2) + Math.pow(c2 - c1, 2));
-
-        return (int)sqrt;
-    }
-
-    private List<Coordinate> getPointsOnLine(Coordinate p1, Coordinate p2) {
-        List<Coordinate> pointsOnLine = new ArrayList<>();
+    private Set<Coordinate> getPointsOnLine(Coordinate p1, Coordinate p2) {
+        Set<Coordinate> pointsOnLine = new HashSet<>();
 
         int x1 = p1.getX(); // Column index of the start point
         int y1 = p1.getY(); // Row index of the start point
-        int x2 = p2.getX();   // Column index of the end point
-        int y2 = p2.getY();   // Row index of the end point
+        int x2 = p2.getX(); // Column index of the end point
+        int y2 = p2.getY(); // Row index of the end point
 
         int dx = x2 - x1;
         int dy = y2 - y1;
 
-        for (int i = 0; i < array.length; i++) {          // Rows
-            for (int j = 0; j < array[0].length; j++) {   // Columns
+        for (int i = 0; i < array.length; i++) { // Rows
+            for (int j = 0; j < array[0].length; j++) { // Columns
                 // Check if the point (i, j) satisfies the line equation
-                if ((i - y1) * dx == (j - x1) * dy) {
+                if (((i - y1) * dx) == ((j - x1) * dy)) {
                     pointsOnLine.add(Coordinate.of(j, i));
                 }
             }
@@ -155,7 +128,7 @@ class TestDay08 {
 
         return pointsOnLine;
     }
-    
+
     @Test
     void getPart2Sum()
     {
