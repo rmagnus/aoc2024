@@ -84,7 +84,7 @@ class TestDay06 {
                     return count;
                 }
                 if (isPlaceForObstacle(map, x, y, direction)) {
-                    LOG.info("x: {} y: {}",1 + x + vector.getX(),1 + y + vector.getY());
+                    LOG.debug("x: {} y: {}",1 + x + vector.getX(),1 + y + vector.getY());
                     count = count + 1; 
                 }
             }
