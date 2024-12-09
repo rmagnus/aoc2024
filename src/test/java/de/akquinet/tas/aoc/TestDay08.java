@@ -62,30 +62,37 @@ class TestDay08 {
         Set<Coordinate> set = new HashSet<>();
 
         map.values().stream()
-                .forEach(l -> set.addAll(getValidAntiNodes(l)));
+                .forEach(l -> set.addAll(getValidAntiNodes(l, true)));
 
         int count = set.size();
+
+        LOG.info("count: {}", count);
 
         Assertions.assertThat(count).isEqualTo(269);
     }
 
-    private Set<Coordinate> getValidAntiNodes(List<Coordinate> points) {
+    private Set<Coordinate> getValidAntiNodes(List<Coordinate> points, boolean filter)
+    {
         Set<Coordinate> set = new HashSet<>();
 
         getAllCombinations(points).stream()
-            .map(p -> getSetOfAntiNodes(p))
+            .map(p -> getSetOfAntiNodes(p, filter))
             .flatMap(Collection::stream)
             .forEach(c -> set.add(c));
 
         return set;
     }
 
-    private Set<Coordinate> getSetOfAntiNodes(Pair<Coordinate, Coordinate> points)
+    private Set<Coordinate> getSetOfAntiNodes(Pair<Coordinate, Coordinate> points, boolean filter)
     {
         Set<Coordinate> set = new HashSet<>();
         Set<Coordinate> line = getPointsOnLine(points.getLeft(), points.getRight());
-        line.stream()
-            .filter(p ->  isRightDistance(p, points.getLeft(), points.getRight()))
+        line.stream().filter(p -> {
+                if (!filter) {
+                    return true;
+                }
+                return isRightDistance(p, points.getLeft(), points.getRight());
+            })
             .forEach(c -> set.add(c));
 
         return set;
@@ -130,10 +137,20 @@ class TestDay08 {
     }
 
     @Test
-    void getPart2Sum()
+    void getPart2Count()
     {
-        LOG.info("getPart2Sum()");
+        LOG.info("getPart2Count()");
 
+        Set<Coordinate> set = new HashSet<>();
+
+        map.values().stream()
+                .forEach(l -> set.addAll(getValidAntiNodes(l, false)));
+
+        int count = set.size();
+
+        LOG.info("count: {}", count);
+
+        Assertions.assertThat(count).isEqualTo(949);
     }
 
     private List<Pair<Coordinate, Coordinate>> getAllCombinations(
