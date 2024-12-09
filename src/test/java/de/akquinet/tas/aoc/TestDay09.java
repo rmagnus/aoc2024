@@ -86,14 +86,11 @@ class TestDay09 {
         Assertions.assertThat(sum).isEqualTo(6460170593016l);
     }
 
-    private long getChecksum(List<Integer> list) {
-        long l = 0;
-        for (int pos = 0; pos < list.size(); pos++) {
-            Integer id = list.get(pos);
-            if (id < 0) { continue; }
-            l = l + pos * id;
-        }
-        return l;
+    private long getChecksum(List<Integer> list)
+    {
+        return IntStream.range(0, list.size())
+                .mapToLong(i -> (list.get(i) < 0) ? 0 : i * list.get(i))
+                .reduce(0, (a, b) -> a + b);
     }
 
     private List<Integer> defragmentBlock(List<Integer> disc)
@@ -119,7 +116,7 @@ class TestDay09 {
         // pro Id absteigend
         for (int id = maxId; id >=0; id--) {
             // wie groß ist der Fileblock
-            List<Integer> idBlock = getPositionForId(disc, id);
+            List<Integer> idBlock = getBlockForId(disc, id);
                         
             // haben wir einen freien Block dieser Größe
             Optional<List<Integer>> freeBlock = getFreeBlock(disc, idBlock.size());
@@ -144,11 +141,8 @@ class TestDay09 {
         block.stream().forEach(i -> disc.set(i, -1));
     }
 
-    private Optional<List<Integer>> getFreeBlock(List<Integer> numbers, int blockSizeId)
+    private Optional<List<Integer>> getFreeBlock(List<Integer> numbers, int blockSize)
     {
-
-        List<List<Integer>> result = new ArrayList<>();
-
         int i = 0;
         while (i < numbers.size()) {
             // If the current element is -1, start collecting a sublist
@@ -158,21 +152,23 @@ class TestDay09 {
                     sublist.add(i);
                     i++;
                 }
-                result.add(sublist);
+                if (sublist.size() >= blockSize) {
+                    return Optional.of(sublist);
+                    
+                }
             } else {
                 i++;
             }
         }
+        
+        return Optional.empty();
 
-        return result.stream()
-            .filter(l -> l.size() >= blockSizeId)
-            .findFirst();
     }
     
-    private List<Integer> getPositionForId(List<Integer> disc, int i) {
+    private List<Integer> getBlockForId(List<Integer> disc, int id) {
         List<Integer> indizies = new ArrayList<>();
         for (int j = 0; j < disc.size(); j++) {
-            if (i == disc.get(j)) {
+            if (id == disc.get(j)) {
                 indizies.add(j);
             }
         }
