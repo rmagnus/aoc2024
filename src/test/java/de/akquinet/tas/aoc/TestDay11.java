@@ -2,7 +2,6 @@ package de.akquinet.tas.aoc;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,35 +36,50 @@ class TestDay11 {
         
         int blinks = 25;
         
-        for (int i = 1; i <= blinks; i++) {
-            LOG.debug("blink: {} stones: {}", i, stones);
-            stones = blink(stones);
-        }
-
-        int size = stones.size();
-
-        LOG.info("size: {}", size);
+        long size = getNumberOfStones(blinks);
 
         Assertions.assertThat(size).isEqualTo(183484);
     }
 
-    private List<Long> blink(List<Long> list) {
-        List<Long> newStones = new ArrayList<>();
+    @Test
+    void getPart2Size()
+    {
+        LOG.info("getPart2Size()");
         
-        for (Long stone : list) {
-            if (stone == 0) {
-                newStones.add(1l);
-            } else if (evenDigitnumber(stone)) {
-                String string = String.valueOf(stone);
-                newStones.add(Long.valueOf(string.substring(0, string.length() / 2)));
-                newStones.add(Long.valueOf(string.substring(string.length() / 2)));
-            } else {
-                newStones.add(stone * 2024);
-            }
+        int blinks = 75;
+        
+        long size = getNumberOfStones(blinks);
+
+        Assertions.assertThat(size).isEqualTo(183484);
+    }
+
+    private long getNumberOfStones(int blinks) {
+        
+        Long size = stones.parallelStream()
+            .map(s -> blink(s, blinks))
+            .reduce(0l, (a,b) -> a + b);
+
+        LOG.info("size: {}", size);
+        return size;
+    }
+
+    private long blink(Long stone, int level) 
+    {
+        if (level == 0) {
+            return 1;
+            
         }
-        
-        return newStones;
-        
+
+        if (stone == 0) {
+                return blink(1l, level - 1);
+            } else if (evenDigitnumber(stone)) {
+                
+                String string = String.valueOf(stone);
+                return blink(Long.valueOf(string.substring(0, string.length() / 2)), level - 1) + 
+                        blink(Long.valueOf(string.substring(string.length() / 2)), level - 1);
+            } else {
+                return blink(stone * 2024, level - 1);
+            }
     }
 
     private boolean evenDigitnumber(Long stone) {
