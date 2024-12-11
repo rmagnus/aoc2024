@@ -22,11 +22,12 @@ class TestDay10 {
     char[][] array;
     int heigth, width;
     List<Coordinate> startPoints = new ArrayList<>();
+    int distinctWays;
 
     @BeforeEach
     public void beforeEach() throws IOException
     {
-        List<String> lines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day10/day10_map_test.txt"));
+        List<String> lines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day10/day10_map.txt"));
 
         width = lines.get(0).length();
         heigth = lines.size();
@@ -47,15 +48,29 @@ class TestDay10 {
     }
 
     @Test
-    void getPart1Sum()
+    void getPart1Count()
     {
-        LOG.info("getPart1Sum()");
+        LOG.info("getPart1Count()");
 
         long count = getNumberOfTrailHeads(array, startPoints);
 
         LOG.info("count: {}", count);
 
-        Assertions.assertThat(count).isEqualTo(36);
+        Assertions.assertThat(count).isEqualTo(512);
+    }
+
+    @Test
+    void getPart2Count()
+    {
+        LOG.info("getPart2Count()");
+        
+        distinctWays = 0;
+
+        getNumberOfTrailHeads(array, startPoints);
+
+        LOG.info("distinctWays: {}", distinctWays);
+
+        Assertions.assertThat(distinctWays).isEqualTo(1045);
     }
 
     private long getNumberOfTrailHeads(char[][] array, List<Coordinate> startPoints2) {
@@ -70,6 +85,7 @@ class TestDay10 {
         LOG.debug("point: {}, level: {}", p, level);
         
         if (level == 9) {
+            distinctWays = distinctWays + 1;
             return Set.of(p);
         }
         
