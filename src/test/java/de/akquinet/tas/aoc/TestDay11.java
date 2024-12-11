@@ -3,7 +3,10 @@ package de.akquinet.tas.aoc;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
@@ -16,7 +19,7 @@ class TestDay11 {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     
-    private List<Long> stones;
+    private Map<Long, Long> stones = new HashMap<>();
 
 
     @BeforeEach
@@ -24,9 +27,9 @@ class TestDay11 {
     {
         List<String> lines = IOUtils.readLines(TestDay05.class.getResourceAsStream("/day11/day11_stones.txt"));
         String[] split = lines.get(0).split(" ");
-        stones = Arrays.stream(split)
+        Arrays.stream(split)
             .map(s -> Long.valueOf(s))
-            .toList();
+            .forEach(l -> stones.merge(l , 1l, Long::sum));
     }
 
     @Test
@@ -53,44 +56,57 @@ class TestDay11 {
         Assertions.assertThat(size).isEqualTo(183484);
     }
 
-    private long getNumberOfStones(int blinks) {
+    private long getNumberOfStones(int blinks) 
+    {
+        Map<Long, Long> map = new HashMap<>(stones);
         
-        Long size = stones.parallelStream()
-            .map(s -> blink(s, blinks))
-            .reduce(0l, (a,b) -> a + b);
-
-        LOG.info("size: {}", size);
-        return size;
+        for (int i = 1; i <= blinks; i++) {
+            map = blink(map);
+            LOG.info("blink: {}, numer of distinct stones: {}", i, map.size());
+        }
+        
+        Long count =  map.values().stream()
+            .reduce(0l, (a, b) -> a + b);
+        
+        LOG.info("count: {}", count);
+        
+        return count;
     }
 
-    private long blink(Long stone, int level) 
+    private Map<Long, Long> blink(Map<Long, Long> stones) 
     {
-        if (level == 0) {
-            return 1;
-            
-        }
 
-        if (stone == 0) {
-                return blink(1l, level - 1);
-            } else if (evenDigitnumber(stone)) {
+        Map<Long, Long> map = new ConcurrentHashMap<>();
+        
+        stones.entrySet().parallelStream()
+            .forEach(entry -> {
+                for (int j = 0; j < entry.getValue(); j++) {
+                    if (entry.getKey() == 0) {
+                        updateOccurences(map, 1l);
+                        
+                    } else if (evenDigitnumber(entry.getKey())) {
+                        
+                        String string = String.valueOf(entry.getKey());
+                        updateOccurences(map, Long.valueOf(string.substring(0, string.length() / 2)));
+                        updateOccurences(map, Long.valueOf(string.substring(string.length() / 2)));
+                        
+                    } else {
+                        updateOccurences(map, entry.getKey() * 2024);
+                    }
+                    
+                }
                 
-                String string = String.valueOf(stone);
-                return blink(Long.valueOf(string.substring(0, string.length() / 2)), level - 1) + 
-                        blink(Long.valueOf(string.substring(string.length() / 2)), level - 1);
-            } else {
-                return blink(stone * 2024, level - 1);
-            }
+            });
+
+        return map;
+    }
+
+    private void updateOccurences(Map<Long, Long> stones, Long stone) {
+        stones.merge(stone, 1l, Long::sum);
     }
 
     private boolean evenDigitnumber(Long stone) {
-        return (String.valueOf(stone).length() % 2 == 0);
-    }
-
-    @Test
-    void getPart2Count()
-    {
-        LOG.info("getPart2Count()");
-        
+        return (stone.toString().length() % 2 == 0);
     }
 
  }
