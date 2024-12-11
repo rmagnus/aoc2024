@@ -3,8 +3,10 @@ package de.akquinet.tas.aoc;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
@@ -17,7 +19,7 @@ class TestDay10 {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    int[][] array;
+    char[][] array;
     int heigth, width;
     List<Coordinate> startPoints = new ArrayList<>();
 
@@ -29,15 +31,15 @@ class TestDay10 {
         width = lines.get(0).length();
         heigth = lines.size();
 
-        array = new int[heigth][width];
+        array = new char[heigth][width];
 
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
             char[] charArray = line.toCharArray();
             for (int j = 0; j < charArray.length; j++) {
-                int p = charArray[j] - 48;
-                array[i][j] = p;
-                if (p == 0) {
+                char p = charArray[j];
+                array[i][j] = charArray[j];
+                if (p == '0') {
                     startPoints.add(Coordinate.of(i, j));
                 }
             }
@@ -49,7 +51,6 @@ class TestDay10 {
     {
         LOG.info("getPart1Sum()");
 
-
         long count = getNumberOfTrailHeads(array, startPoints);
 
         LOG.info("count: {}", count);
@@ -57,38 +58,33 @@ class TestDay10 {
         Assertions.assertThat(count).isEqualTo(36);
     }
 
-    private long getNumberOfTrailHeads(int[][] array, List<Coordinate> startPoints2) {
+    private long getNumberOfTrailHeads(char[][] array, List<Coordinate> startPoints2) {
         
         return startPoints2.stream()
-            .map(p -> getNumberOfTrailHeads(array, p, 0))
-            .reduce(0l, (a,b) -> a + b);
+            .map(p -> getTrailHeads(array, p, 0))
+            .flatMap(Collection::stream)
+            .count();
     }
 
-    private long getNumberOfTrailHeads(int[][] array, Coordinate p, int level) {
-        LOG.info("point: {}, level: {}", p, level);
+    private Set<Coordinate> getTrailHeads(char[][] array, Coordinate p, int level) {
+        LOG.debug("point: {}, level: {}", p, level);
         
         if (level == 9) {
-            return 1;
+            return Set.of(p);
         }
         
         List<Coordinate> nextPoints = getNextPoints(array, p, level + 1);
         
-        if (nextPoints.isEmpty()) { return 0; }
-                
-        Stream<Long> map = nextPoints.stream()
-            .map(nextPoint -> getNumberOfTrailHeads(array, nextPoint, level + 1));
-        
-        List<Long> l = map.toList();
-        Long reduce = l.stream()
-            .reduce(0l, (a, b) -> a + b);
-        
-        LOG.info("Number: {}", reduce);
-        
-        return reduce;
-        
+        Set<Coordinate> reachedHeads = new HashSet<>();
+
+        nextPoints.forEach(
+                nextPoint -> reachedHeads.addAll(getTrailHeads(array, nextPoint, level + 1))
+                );
+
+        return reachedHeads;
     }
 
-    private List<Coordinate> getNextPoints(int[][] array, Coordinate p, int level)
+    private List<Coordinate> getNextPoints(char[][] array, Coordinate p, int level)
     {
         List<Coordinate> points = new ArrayList<>();
 
@@ -96,7 +92,7 @@ class TestDay10 {
             for (int j = -1; j <= 1; j++) {
                 int x = p.getX() + i;
                 int y = p.getY() + j;
-                if (inside(x, y) && (Math.abs(i) + Math.abs(j) == 1) && array[x][y] == level) {
+                if (inside(x, y) && (Math.abs(i) + Math.abs(j) == 1) && array[x][y] == level + 48) {
                     Coordinate nextP = Coordinate.of(x, y);
                     LOG.debug("pos: {} level: {} next Point: {}", p, level, nextP);
                     points.add(nextP);
