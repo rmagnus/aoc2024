@@ -73,40 +73,41 @@ class TestDay11 {
         return count;
     }
 
-    private Map<Long, Long> blink(Map<Long, Long> stones) 
-    {
+    private Map<Long, Long> blink(Map<Long, Long> stones) {
 
         Map<Long, Long> map = new ConcurrentHashMap<>();
-        
-        stones.entrySet().parallelStream()
-            .forEach(entry -> {
-                for (int j = 0; j < entry.getValue(); j++) {
-                    if (entry.getKey() == 0) {
-                        updateOccurences(map, 1l);
-                        
-                    } else if (evenDigitnumber(entry.getKey())) {
-                        
-                        String string = String.valueOf(entry.getKey());
-                        updateOccurences(map, Long.valueOf(string.substring(0, string.length() / 2)));
-                        updateOccurences(map, Long.valueOf(string.substring(string.length() / 2)));
-                        
-                    } else {
-                        updateOccurences(map, entry.getKey() * 2024);
-                    }
-                    
+
+        stones.entrySet().parallelStream().forEach(entry -> {
+            for (int j = 0; j < entry.getValue(); j++) {
+                Long key = entry.getKey();
+                String str = key.toString();
+
+                if (key == 0) {
+                    updateOccurences(map, 1l);
+                } else if (evenDigitnumber(str)) {
+                    int half = str.length() / 2;
+                    updateOccurences(map, Long.parseLong(str.substring(0, half)));
+                    updateOccurences(map, Long.parseLong(str.substring(half)));
+
+                } else {
+                    updateOccurences(map, key * 2024);
                 }
-                
-            });
+
+            }
+
+        });
 
         return map;
     }
 
-    private void updateOccurences(Map<Long, Long> stones, Long stone) {
-        stones.merge(stone, 1l, Long::sum);
+    private void updateOccurences(Map<Long, Long> stones, long stone) {
+            Long l = stones.get(stone);
+            Long newValue = (l == null) ? 1 : l + 1;
+            stones.put(stone, newValue);
     }
 
-    private boolean evenDigitnumber(Long stone) {
-        return (stone.toString().length() % 2 == 0);
+    private boolean evenDigitnumber(String str) {
+        return (str.length() % 2 == 0);
     }
 
  }
