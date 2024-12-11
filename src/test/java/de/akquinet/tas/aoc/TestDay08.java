@@ -22,7 +22,7 @@ class TestDay08 {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    char[][] array, array2;
+    char[][] array;
     int heigth, width;
     Map<Character, List<Coordinate>> map = new HashMap<>();
 
@@ -35,12 +35,10 @@ class TestDay08 {
         heigth = lines.size();
 
         array = new char[heigth][width];
-        array2 = new char[heigth][width];
 
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
             array[i] = line.toCharArray();
-            array2[i] = line.toCharArray();
             for (int j = 0; j < array.length; j++) {
                 char c = array[i][j];
                 if (c != '.') {
