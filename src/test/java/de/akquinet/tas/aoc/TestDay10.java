@@ -61,7 +61,7 @@ class TestDay10 {
         
         return startPoints2.stream()
             .map(p -> getNumberOfTrailHeads(array, p, 0))
-            .reduce(0l, (a,b) -> a +b);
+            .reduce(0l, (a,b) -> a + b);
     }
 
     private long getNumberOfTrailHeads(int[][] array, Coordinate p, int level) {
@@ -72,13 +72,15 @@ class TestDay10 {
         }
         
         List<Coordinate> nextPoints = getNextPoints(array, p, level + 1);
+        
+        if (nextPoints.isEmpty()) { return 0; }
                 
         Stream<Long> map = nextPoints.stream()
             .map(nextPoint -> getNumberOfTrailHeads(array, nextPoint, level + 1));
         
         List<Long> l = map.toList();
         Long reduce = l.stream()
-            .count();
+            .reduce(0l, (a, b) -> a + b);
         
         LOG.info("Number: {}", reduce);
         
@@ -96,7 +98,7 @@ class TestDay10 {
                 int y = p.getY() + j;
                 if (inside(x, y) && (Math.abs(i) + Math.abs(j) == 1) && array[x][y] == level) {
                     Coordinate nextP = Coordinate.of(x, y);
-                    LOG.info("pos: {} level: {} next Point: {}", p, level, nextP);
+                    LOG.debug("pos: {} level: {} next Point: {}", p, level, nextP);
                     points.add(nextP);
                 }
             }
