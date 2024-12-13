@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 class TestDay13 {
@@ -46,41 +48,62 @@ class TestDay13 {
     void getPart1Price() {
         LOG.info("getPart1Price()");
         
-        int price = machines.stream()
+        long price = machines.stream()
             .map(m -> getPossibleSolution(m))
             .filter(s -> s.isPresent())
-            .map(s -> 3 * s.get().getX() + s.get().getY())
-            .reduce(0, (a,b) -> a+ b);
+            .map(s -> 3 * s.get().getLeft() + s.get().getRight())
+            .reduce(0l, (a,b) -> a + b);
 
         LOG.info("Price: {}", price);
         
         Assertions.assertThat(price).isEqualTo(27105);
     }
 
+    @Test
+    void getPart2Price() {
+        LOG.info("getPart2Price()");
+        
+        long price = machines.stream()
+            .map(m -> {
+                Pair<Long, Long> p = m.getPrice();
+                m.setPrice(Pair.of(p.getLeft() + 10000000000000l, p.getRight() + 10000000000000l));
+                return m;
+                })
+            .map(m -> getPossibleSolution(m))
+            .filter(s -> s.isPresent())
+            .map(s -> 3 * s.get().getLeft() + s.get().getRight())
+            .reduce(0l, (a,b) -> a + b);
 
-    private Optional<Coordinate> getPossibleSolution(ClawMachine m)
+        LOG.info("Price: {}", price);
+        
+        Assertions.assertThat(price).isEqualTo(101726882250942l);
+    }
+
+
+    // Lösung nach der Determinanten Methode (Cramer's Regel)
+    private Optional<Pair<Long, Long>> getPossibleSolution(ClawMachine m)
     {
         
-        int a1 = m.getVectorA().getX(), b1 = m.getVectorB().getX(), n1 = m.getPrice().getX();
-        int a2 = m.getVectorA().getY(), b2 = m.getVectorB().getY(), n2 = m.getPrice().getY();
+        long a1 = m.getVectorA().getLeft(), b1 = m.getVectorB().getLeft(), n1 = m.getPrice().getLeft();
+        long a2 = m.getVectorA().getRight(), b2 = m.getVectorB().getRight(), n2 = m.getPrice().getRight();
 
         // Calculate determinant of A
-        int detA = a1 * b2 - a2 * b1;
+        long detA = a1 * b2 - a2 * b1;
 
         if (detA == 0) {
             return Optional.empty();
         } else {
             // Determinants for x and y
-            int detAx = n1 * b2 - n2 * b1;
-            int detAy = a1 * n2 - a2 * n1;
+            long detAx = n1 * b2 - n2 * b1;
+            long detAy = a1 * n2 - a2 * n1;
 
             // Solve for x and y
-            int x = detAx / detA;
-            int y = detAy / detA;
+            long x = detAx / detA;
+            long y = detAy / detA;
             
             // cross check
             if ((x*a1+y*b1 == n1) && (x*a2+y*b2 == n2)) {
-                return Optional.of(Coordinate.of(x, y));
+                return Optional.of(Pair.of(x, y));
             }
 
         }
@@ -91,11 +114,12 @@ class TestDay13 {
 
 
     @Getter
+    @Setter
     @ToString
     class ClawMachine {
-        Coordinate vectorA;
-        Coordinate vectorB;
-        Coordinate price;
+        Pair<Integer, Integer> vectorA;
+        Pair<Integer, Integer> vectorB;
+        Pair<Long, Long> price;
         
         public ClawMachine(List<String> conf)
         {
@@ -104,17 +128,17 @@ class TestDay13 {
             price = getPrice(conf.get(2));
         }
 
-        private Coordinate getPrice(String string) {
+        private Pair<Long, Long> getPrice(String string) {
             String[] split = string.split(" ");
             String[] split2 = split[1].split("=");
-            Integer x = Integer.valueOf(split2[1].substring(0, split2[1].indexOf(',')));
+            Long x = Long.valueOf(split2[1].substring(0, split2[1].indexOf(',')));
             String[] split3 = split[2].split("=");
-            Integer y = Integer.valueOf(split3[1]);
+            Long y = Long.valueOf(split3[1]);
 
-            return Coordinate.of(x, y);
+            return Pair.of(x, y);
         }
 
-        private Coordinate getVector(String string) {
+        private Pair<Integer, Integer> getVector(String string) {
             
             String[] split = string.split(" ");
             String[] split2 = split[2].split("\\+");
@@ -122,7 +146,7 @@ class TestDay13 {
             String[] split3 = split[3].split("\\+");
             Integer y = Integer.valueOf(split3[1]);
 
-            return Coordinate.of(x, y);
+            return Pair.of(x, y);
         }
     }
 }
