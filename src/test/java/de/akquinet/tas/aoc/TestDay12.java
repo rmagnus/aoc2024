@@ -3,7 +3,9 @@ package de.akquinet.tas.aoc;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import org.apache.commons.io.IOUtils;
@@ -25,7 +27,7 @@ class TestDay12 {
     @BeforeEach
     public void beforeEach() throws IOException
     {
-        List<String> lines = IOUtils.readLines(TestDay12.class.getResourceAsStream("/day12/day12_map.txt"));
+        List<String> lines = IOUtils.readLines(TestDay12.class.getResourceAsStream("/day12/day12_map_test.txt"));
 
         width = lines.get(0).length();
         heigth = lines.size();
@@ -43,25 +45,36 @@ class TestDay12 {
     {
         LOG.info("getPart1Price()");
         
-        List<Region> regions = findRegions(array);
+        List<Region> regions = findRegions(array, (grid, visited, rows, cols) -> exploreRegion(grid, visited, rows, cols));
         
         Integer price = regions.stream()
-            .map(r -> r.getSize() * r.getPerimeter())
+            .map(r -> r.getPoints().size() * r.getPerimeter())
             .reduce(0, (a,b) -> a + b);
         
         LOG.info("price: {}", price);
         
-        Assertions.assertThat(price).isEqualTo(1461806);
+        Assertions.assertThat(price).isEqualTo(1930);
     }
 
     @Test
     void getPart2Size()
     {
         LOG.info("getPart2Size()");
+
+        List<Region> regions = findRegions(array, (grid, visited, rows, cols) -> exploreRegionWithLines(grid, visited, rows, cols));
         
+        Integer price = regions.stream()
+                .map(r -> r.getPoints().size() * r.getPerimeter())
+                .reduce(0, (a,b) -> a + b);
+        
+        LOG.info("price: {}", price);
+        
+        Assertions.assertThat(price).isEqualTo(1206);
+
     }
 
-    public static List<Region> findRegions(char[][] grid) {
+
+    private List<Region> findRegions(char[][] grid, RegionFunction rf) {
         int rows = grid.length;
         int cols = grid[0].length;
 
@@ -72,7 +85,7 @@ class TestDay12 {
             for (int j = 0; j < cols; j++) {
                 if (!visited[i][j]) {
                     // Start a new region
-                    Region region = exploreRegion(grid, visited, i, j);
+                    Region region = rf.getRegion(grid, visited, i, j);
                     regions.add(region);
                 }
             }
@@ -80,8 +93,8 @@ class TestDay12 {
 
         return regions;
     }    
-
-    private static Region exploreRegion(char[][] grid, boolean[][] visited, int startRow, int startCol) {
+    
+    private Region exploreRegion(char[][] grid, boolean[][] visited, int startRow, int startCol) {
         int rows = grid.length;
         int cols = grid[0].length;
         char character = grid[startRow][startCol];
@@ -91,7 +104,7 @@ class TestDay12 {
         stack.push(new int[]{startRow, startCol});
         visited[startRow][startCol] = true;
 
-        int size = 0;
+        Set<Coordinate> points = new HashSet<>();
         int perimeter = 0;
 
         // Directions: up, down, left, right
@@ -101,8 +114,8 @@ class TestDay12 {
         while (!stack.isEmpty()) {
             int[] cell = stack.pop();
             int r = cell[0], c = cell[1];
-            size++;
-
+            points.add(Coordinate.of(r, c));
+            
             // Check neighbors
             for (int d = 0; d < 4; d++) {
                 int nr = r + dr[d];
@@ -118,27 +131,134 @@ class TestDay12 {
                 }
             }
         }
+         
+        return new Region(character, points, perimeter);
+    }
+        
+    private Region exploreRegionWithLines(char[][] grid, boolean[][] visited, int startRow, int startCol) {
+        int rows = grid.length;
+        int cols = grid[0].length;
+        char character = grid[startRow][startCol];
 
-        return new Region(character, size, perimeter);
+        // DFS stack to explore the region
+        Stack<int[]> stack = new Stack<>();
+        stack.push(new int[]{startRow, startCol});
+        visited[startRow][startCol] = true;
+
+        Set<Coordinate> points = new HashSet<>();
+        int corners = 0;
+        
+        // Directions: up, down, left, right
+        int[] dr = {-1, 1, 0, 0};
+        int[] dc = {0, 0, -1, 1};
+
+        while (!stack.isEmpty()) {
+            int[] cell = stack.pop();
+            int r = cell[0], c = cell[1];
+            points.add(Coordinate.of(r, c));
+            corners = corners + getNrOfCornes(character, grid, r, c);
+            
+            // Check neighbors
+            for (int d = 0; d < 4; d++) {
+                int nr = r + dr[d];
+                int nc = c + dc[d];
+
+                if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || grid[nr][nc] != character) {
+                    // Out of bounds or different character -> contributes to perimeter
+                    
+                } else if (!visited[nr][nc]) {
+                    // Valid neighbor and not visited
+                    visited[nr][nc] = true;
+                    stack.push(new int[]{nr, nc});
+                }
+            }
+            
+        }
+        
+        LOG.info("Region: {} size: {} corners: {}", character, points.size(), corners);
+        
+        return new Region(character, points, corners);
     }
     
+
+    private int getNrOfCornes(char c, char[][] grid, int x, int y) {
+        
+        
+        int corners = getCorners(c, grid, x, y);
+        
+        LOG.info("c: {} x: {} y: {} : corners: {}", c, x + 1, y + 1, corners);
+        
+        if (corners > 1) { return corners; }
+        
+        if (corners == 0) { return checkInsideCorner(c, grid, x, y); }
+        
+
+        return 0;
+    }
+
+
+    private int checkInsideCorner(char c, char[][] grid, int x, int y) {
+        int rows = grid.length;
+        int cols = grid[0].length;
+        int[] dr = { -1, -1, 1, 1 };
+        int[] dc = { 1, -1, -1, 1 };
+        int cCount = 0;
+        for (int d = 0; d < 4; d++) {
+            int nr = x + dr[d];
+            int nc = y + dc[d];
+
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || grid[nr][nc] != c) {
+                cCount = cCount +1;
+            }
+        }
+        return cCount;
+    }
+
+    private int getCorners(char c, char[][] grid, int x, int y)
+    {
+        int[] dr = {-1, 0, 1, 0};
+        int[] dc = {0, 1, 0, -1};
+        int cCount = 0;
+        for (int d = 0; d < 4; d++) {
+            if (isFree(c, grid, x, y, dr, dc, d) && isFree(c, grid, x, y, dr, dc, (d +1) % 4)) {
+                cCount = cCount +1;
+            }
+        }
+        return cCount;
+    }
+
+    private boolean isFree(char c, char[][] grid, int x, int y, int[] dr, int[] dc, int d) {
+        int rows = grid.length;
+        int cols = grid[0].length;
+        int nr = x + dr[d];
+        int nc = y + dc[d];
+        
+        LOG.debug("check field x: {} y: {}", nr + 1, nc + 1);
+
+        if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || grid[nr][nc] != c) {
+            return true;
+        }
+        return false;
+    }
+
 
     @Getter
     static class Region {
         char character; // The character of this region
-        int size; // Number of cells in this region
+        Set<Coordinate> points = new HashSet<>();
         int perimeter; // Perimeter of this region
 
-        Region(char character, int size, int perimeter) {
+        Region(char character, Set<Coordinate> points, int perimeter) {
             this.character = character;
-            this.size = size;
+            this.points = points;
             this.perimeter = perimeter;
         }
 
-        @Override
-        public String toString() {
-            return String.format("Character: %c, Size: %d, Perimeter: %d", character, size, perimeter);
-        }
+    }
+    
+    @FunctionalInterface
+    interface RegionFunction {
+        Region getRegion(char[][] grid, boolean[][] visited, int startRow, int startCol);
     }
 
  }
